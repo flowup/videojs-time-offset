@@ -114,28 +114,37 @@ const onPlayerReady = (player, options) => {
     return __monkey__.duration.apply(player, args);
   };
 
-  player.buffered = function () {
-    var buffered = __monkey__.buffered.call(player);
+  player.buffered = () => {
+    const buffered = __monkey__.buffered.call(player);
+
     return {
-        buffered: buffered,
-        length: buffered.length,
-        start: function(i) {
-          var buf = buffered.start(i) - offsetStart;
+      buffered,
+      length: buffered.length,
+      start: (i) => {
+        let buf = buffered.start(i) - offsetStart;
 
-          if (buf < 0)                buf = 0;
-          if (buf > computedDuration) buf = computedDuration;
-
-          return buf;
-        },
-
-        end: function(i) {
-          var buf = buffered.end(i) - offsetStart;
-
-          if (buf < 0)                buf = 0;
-          if (buf > computedDuration) buf = computedDuration;
-
-          return buf;
+        if (buf < 0) {
+          buf = 0;
         }
+        if (buf > computedDuration) {
+          buf = computedDuration;
+        }
+
+        return buf;
+      },
+
+      end: (i) => {
+        let buf = buffered.end(i) - offsetStart;
+
+        if (buf < 0) {
+          buf = 0;
+        }
+        if (buf > computedDuration) {
+          buf = computedDuration;
+        }
+
+        return buf;
+      }
     };
   };
 
@@ -146,7 +155,7 @@ const onPlayerReady = (player, options) => {
       return __monkey__.currentTime.call(player, seconds);
     }
 
-    var current = __monkey__.currentTime.call(player) - offsetStart;
+    let current = __monkey__.currentTime.call(player) - offsetStart;
 
     if (current < -0.1) {
       player.currentTime(0);
