@@ -243,6 +243,6 @@ const timeOffset = function(options) {
 videojs.plugin('timeOffset', timeOffset);
 
 // Include the version number.
-timeOffset.VERSION = '0.0.1';
+timeOffset.VERSION = '0.0.2';
 
 export default timeOffset;
