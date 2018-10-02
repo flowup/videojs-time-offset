@@ -89,7 +89,8 @@ const onPlayerReady = (player, options) => {
   const __monkey__ = {
     currentTime: player.currentTime,
     remainingTime: player.remainingTime,
-    duration: player.duration
+    duration: player.duration,
+    buffered: player.buffered
   };
 
   player.addClass('vjs-time-offset');
@@ -113,6 +114,31 @@ const onPlayerReady = (player, options) => {
     return __monkey__.duration.apply(player, args);
   };
 
+  player.buffered = function () {
+    var buffered = __monkey__.buffered.call(player);
+    return {
+        buffered: buffered,
+        length: buffered.length,
+        start: function(i) {
+          var buf = buffered.start(i) - offsetStart;
+
+          if (buf < 0)                buf = 0;
+          if (buf > computedDuration) buf = computedDuration;
+
+          return buf;
+        },
+
+        end: function(i) {
+          var buf = buffered.end(i) - offsetStart;
+
+          if (buf < 0)                buf = 0;
+          if (buf > computedDuration) buf = computedDuration;
+
+          return buf;
+        }
+    };
+  };
+
   player.currentTime = (seconds) => {
     if (typeof seconds !== 'undefined') {
       seconds = seconds + offsetStart;
@@ -120,14 +146,24 @@ const onPlayerReady = (player, options) => {
       return __monkey__.currentTime.call(player, seconds);
     }
 
-    const current = __monkey__.currentTime.call(player) - offsetStart;
+    var current = __monkey__.currentTime.call(player) - offsetStart;
 
-    // in safari with hls, it returns floating number numbers, fix it
-    if (Math.ceil(current) < 0) {
-      player.pause();
+    if (current < -0.1) {
       player.currentTime(0);
       return 0;
     }
+
+    if (current > computedDuration) {
+      player.currentTime(computedDuration);
+      current = computedDuration;
+
+      // player.pause();
+      if (!isEndedTriggered) {
+        player.trigger('endedoffset');
+        isEndedTriggered = true;
+      }
+    }
+
     return current;
   };
 
@@ -176,7 +212,7 @@ const onPlayerReady = (player, options) => {
       player.pause();
 
       if (!isEndedTriggered) {
-        player.trigger('ended');
+        player.trigger('endedoffset');
         player.on('adEnded', function() {
           isEndedTriggered = true;
         });
